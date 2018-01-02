@@ -229,8 +229,8 @@ def main():
     dp.add_handler(CommandHandler("todo", todo))
     dp.add_handler(CommandHandler("done", done))
     dp.add_handler(CommandHandler("completed", completed))
-    dp.add_handler(CommandHandler("tasks3", tasks_))
-    dp.add_handler(CommandHandler("l3ader", leaderboard))
+    dp.add_handler(CommandHandler("tasks", tasks_))
+    dp.add_handler(CommandHandler("leaderboard", leaderboard))
     dp.add_handler(CommandHandler("streak", streak))
     dp.add_handler(InlineQueryHandler(inlinequery))
 
