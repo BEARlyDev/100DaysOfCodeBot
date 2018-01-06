@@ -28,11 +28,8 @@ db = dataset.connect('sqlite:///todo.db')
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
-HELP_TEXT = """`/gitname github username` to set your username
-`/todo topicname` to add a new task
-`/done topicname` to add a finished task
-`@gsctbot <space>` to mark tasks as finished
-"""
+
+HELP_TEXT = "`/gitname github username` to set your username \n`/todo topicname` to add a new task\n`/done topicname` to add a finished task\n`/tasks' to show all the tasks added\n`/streak` to show the no. of days\n `@gsctbot <space>` to mark tasks as finished\n"
 
 commands = ['none', 'todo', 'done','start']
 reply_keyboard = [['/todo', '/done'],['/leaderboard','/help']]
@@ -60,8 +57,8 @@ def getTasks(user):
 def start(bot, update):
     """Send a message when the command /start is issued."""
     user = update.message.from_user
-    update.message.reply_text('_Dear {}_,\n\n *Welcome to GetSetCode* 💻 ,\n\nStart by setting your github username using /gitname <space> _username_.'.format(user.first_name.title()),
-     parse_mode = 'MarkDown',reply_markup=ReplyKeyboardRemove())
+    reply = '_Dear {}_,\n\n *Welcome to GetSetCode* 💻 ,\n\nStart by setting your github username using /gitname <space> _username_.'.format(user.first_name.title())
+    update.message.reply_text(reply, parse_mode = 'MarkDown',reply_markup=ReplyKeyboardRemove())
 
 def gitname(bot, update):
     user = update.message.from_user
@@ -79,9 +76,14 @@ def gitname(bot, update):
 
 
 def help(bot, update):
+    # no need of reply for commands from group chats
+    if update.message.chat_id < 0:
+        return
+
     """Send a message when the command /help is issued."""
-    update.message.reply_text(HELP_TEXT, parse_mode = 'MarkDown',
-        reply_markup=ReplyKeyboardRemove())
+    # update.message.reply_text(HELP_TEXT, parse_mode = 'MarkDown',
+    #    reply_markup=ReplyKeyboardRemove())
+    update.message.reply_text(HELP_TEXT)
 
 
 def todo(bot, update):
@@ -141,6 +143,11 @@ def leaderboard(bot, update):
 def tasks_(bot, update):
     reply = 'Your tasks are\n\n'
     user = update.message.from_user
+
+    # if the command is from a group chat no need of reply
+    if update.message.chat_id < 0:
+        return
+
     tasks2 = tasks.find(user_id = user.id)
     for task in tasks2:
         reply += '• {}'.format(task['text'])
@@ -217,7 +224,7 @@ def main():
     """Start the bot."""
     # Create the EventHandler and pass it your bot's token.
 
-    updater = Updater("TOKEN")
+    updater = Updater("514604364:AAF7Iae4c11PLjefhBChUhx5PMSlStEKHIc")
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
@@ -225,7 +232,7 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("gitname", gitname))
-    #dp.add_handler(CommandHandler("help", help))
+    dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("todo", todo))
     dp.add_handler(CommandHandler("done", done))
     dp.add_handler(CommandHandler("completed", completed))
