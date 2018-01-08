@@ -85,8 +85,19 @@ def help(bot, update):
     #    reply_markup=ReplyKeyboardRemove())
     update.message.reply_text(HELP_TEXT)
 
+def alarm(bot, job):
+    """Send the alarm message."""
+    # update = 
+    usrname = str(bot.getChat(job.context).username)
+    # user = update.message.user
+    print tasks.count(username = usrname,finished = False)
 
-def todo(bot, update):
+    REMINDER_TEXT = "You have {} pending tasks.\n" #.format(str(tasks.count(username = usrname,finished = False)))
+    bot.send_message(job.context, text=REMINDER_TEXT)
+
+
+# def todo(bot, update):
+def todo(bot, update, args, job_queue, chat_data):
     """Send a message when the command /help is issued."""
     task = update.message.text[6:]
     print('task : ' + task)
@@ -95,7 +106,9 @@ def todo(bot, update):
         update.message.reply_text('💡 The format is /todo <space> Taskname ')    
     else:
         addToDo(user, task)
+        job = job_queue.run_repeating(alarm, interval=60,first=0, context=update.message.chat_id)
         update.message.reply_text('🚣‍ @{} added task : {}.\n ({} pending tasks)'.format(user.username, task, str(tasks.count(user_id = user.id,finished = False))))
+            
 
 def done(bot, update):
     """Send a message when the command /help is issued."""
@@ -157,6 +170,19 @@ def tasks_(bot, update):
             reply += ' - ⭕ /finished{}\n'.format(str(task['id']))
     update.message.reply_text(reply, parse_mode = 'MarkDown')
 
+
+
+def set_timer(bot, update, args, job_queue, chat_data):
+    """Add a job to the queue."""
+    chat_id = update.message.chat_id
+    try:
+        # Add job to queue
+        job = job_queue.run_repeating(alarm, interval=60,first=0, context=chat_id)
+        # job = job_queue.run_repeating(set_timer, interval=5, first=0)
+        # chat_data['job'] = job
+        # update.message.reply_text('Timer successfully set!')
+    except (IndexError, ValueError):
+        update.message.reply_text('Usage: /set <seconds>')
 
 
 def echo(bot, update):
@@ -225,7 +251,7 @@ def main():
     # Create the EventHandler and pass it your bot's token.
 
     updater = Updater("514604364:AAF7Iae4c11PLjefhBChUhx5PMSlStEKHIc")
-
+    j = updater.job_queue
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
@@ -233,13 +259,18 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("gitname", gitname))
     dp.add_handler(CommandHandler("help", help))
-    dp.add_handler(CommandHandler("todo", todo))
+    # dp.add_handler(CommandHandler("todo", todo))
     dp.add_handler(CommandHandler("done", done))
     dp.add_handler(CommandHandler("completed", completed))
     dp.add_handler(CommandHandler("tasks", tasks_))
     dp.add_handler(CommandHandler("leaderboard", leaderboard))
     dp.add_handler(CommandHandler("streak", streak))
     dp.add_handler(InlineQueryHandler(inlinequery))
+    dp.add_handler(CommandHandler("todo", todo,
+                                  pass_args=True,
+                                  pass_job_queue=True,
+                                  pass_chat_data=True))
+
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, echo))
