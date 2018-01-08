@@ -44,16 +44,17 @@ class GitActivity:
 
         for event in result:
             eventType = event['type']
-            yesterday = dateparser.parse('yesterday')
+            yesterday = dateparser.parse('yesterday').date()
 
-            if eventType == 'PushEvent' and dateparser.parse(event['created_at']).date() == yesterday.date():
+            if eventType == 'PushEvent' and dateparser.parse(event['created_at']).date() == yesterday:
                 commits += int(event['payload']['size'])
 
-        self.github_activity.insert({
-            'gitname': github_username,
-            'commits': commits,
-            'updated': str(yesterday)
-        })
+        if commits > 0:
+            self.github_activity.insert({
+                'gitname': github_username,
+                'commits': commits,
+                'updated': str(yesterday)
+            })
 
         return True
 
