@@ -19,21 +19,25 @@ class GitActivity:
 
     def update_leaderboard(self):
         for user in self.users:
-            username = user['username']
+            github_username = user['gitname']
 
-            activity = self.github_activity.find_one(username=username, order_by='-id')
+            if github_username == '':
+                continue
+
+            github_username = github_username.lower()
+
+            activity = self.github_activity.find_one(gitname=github_username, order_by='-id')
             yesterday = dateparser.parse('yesterday')
 
             if not activity or dateparser.parse(activity['updated']).date() != yesterday.date():
-                if user['gitname'] == '':
-                    continue
-
-                if self.save_activity(user['gitname']):
-                    print('Updated info of %s.' % username)
+                if self.save_activity(github_username):
+                    print('Updated info of %s.' % github_username)
                 else:
-                    print('Couldn\'t get info of %s.' % username)
+                    print('Couldn\'t get info of %s.' % github_username)
 
     def save_activity(self, github_username):
+        github_username = github_username.lower()
+
         r = requests.get('https://api.github.com/users/%s/events/public' % github_username)
         result = r.json()
 
