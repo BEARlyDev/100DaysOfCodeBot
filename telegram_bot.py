@@ -85,30 +85,50 @@ def help(bot, update):
     #    reply_markup=ReplyKeyboardRemove())
     update.message.reply_text(HELP_TEXT)
 
+
 def alarm(bot, job):
     """Send the alarm message."""
-    # update = 
     usrname = str(bot.getChat(job.context).username)
-    # user = update.message.user
-    print tasks.count(username = usrname,finished = False)
+    d = dataset.connect('sqlite:///todo.db')
+    t = d['tasks']
+    task = list(t.find(user_id=job.context,finished=False))
+    task_count = len(task)
 
-    REMINDER_TEXT = "You have {} pending tasks.\n" #.format(str(tasks.count(username = usrname,finished = False)))
+    REMINDER_TEXT = "Hi @{0},\nYou have {1} pending tasks.\n".format(usrname, task_count)
+    for t in task:
+        line = "• {0}\n".format(dict(t)['text'])
+        REMINDER_TEXT += line 
+
     bot.send_message(job.context, text=REMINDER_TEXT)
 
 
-# def todo(bot, update):
-def todo(bot, update, args, job_queue, chat_data):
+def todo(bot, update):
+    # def todo(bot, update, args, job_queue, chat_data):
     """Send a message when the command /help is issued."""
     task = update.message.text[6:]
     print('task : ' + task)
     user = update.message.from_user
+    
     if(task == ''):
         update.message.reply_text('💡 The format is /todo <space> Taskname ')    
     else:
         addToDo(user, task)
-        job = job_queue.run_repeating(alarm, interval=60,first=0, context=update.message.chat_id)
-        update.message.reply_text('🚣‍ @{} added task : {}.\n ({} pending tasks)'.format(user.username, task, str(tasks.count(user_id = user.id,finished = False))))
+        update.message.reply_text('🚣‍ @{} added task : {}.\n ({} pending tasks)'.format(user.username, task, str(tasks.count(user_id = user.id,finished = False))))        
+        # job = job_queue.run_repeating(alarm, interval=60,first=0, context=update.message.chat_id)
             
+def reminder(bot, update, args, job_queue, chat_data):
+    cmd = str(update.message.text[10:])
+    print(job_queue.jobs())
+    print cmd
+    if cmd == 'on':
+        update.message.reply_text('Reminder turned on\n')
+        job = job_queue.run_repeating(alarm, interval=86400,first=0, context=update.message.chat_id)
+        job.enabled = True
+    elif cmd == 'off':
+        update.message.reply_text('Reminder turned off\n')
+        job_queue.stop()
+    else:
+        update.message.reply_text('Handle reminders with /reminder on  or /reminder off\n')
 
 def done(bot, update):
     """Send a message when the command /help is issued."""
@@ -169,21 +189,6 @@ def tasks_(bot, update):
         else:
             reply += ' - ⭕ /finished{}\n'.format(str(task['id']))
     update.message.reply_text(reply, parse_mode = 'MarkDown')
-
-
-
-def set_timer(bot, update, args, job_queue, chat_data):
-    """Add a job to the queue."""
-    chat_id = update.message.chat_id
-    try:
-        # Add job to queue
-        job = job_queue.run_repeating(alarm, interval=60,first=0, context=chat_id)
-        # job = job_queue.run_repeating(set_timer, interval=5, first=0)
-        # chat_data['job'] = job
-        # update.message.reply_text('Timer successfully set!')
-    except (IndexError, ValueError):
-        update.message.reply_text('Usage: /set <seconds>')
-
 
 def echo(bot, update):
     """Echo the user message."""
@@ -266,7 +271,8 @@ def main():
     dp.add_handler(CommandHandler("leaderboard", leaderboard))
     dp.add_handler(CommandHandler("streak", streak))
     dp.add_handler(InlineQueryHandler(inlinequery))
-    dp.add_handler(CommandHandler("todo", todo,
+    dp.add_handler(CommandHandler("todo", todo))
+    dp.add_handler(CommandHandler("reminder",reminder,
                                   pass_args=True,
                                   pass_job_queue=True,
                                   pass_chat_data=True))
