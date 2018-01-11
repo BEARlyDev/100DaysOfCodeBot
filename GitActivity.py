@@ -32,9 +32,9 @@ class GitActivity:
             if not activity or dateparser.parse(activity['updated']).date() != yesterday.date():
                 save = self.save_activity(github_username)
                 if save:
-                    print('Updated info of %s.' % github_username)
+                    print('Updated info of %s' % github_username)
                 elif save == False:
-                    print('Couldn\'t get info of %s.' % github_username)
+                    print('Couldn\'t get info of %s' % github_username)
 
     def save_activity(self, github_username):
         github_username = github_username.lower()
