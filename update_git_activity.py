@@ -3,4 +3,4 @@
 from GitActivity import *
 
 g = GitActivity()
-g.save_activity('subins2000')
+g.update_leaderboard()
