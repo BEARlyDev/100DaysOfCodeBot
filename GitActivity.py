@@ -30,15 +30,16 @@ class GitActivity:
             yesterday = dateparser.parse('yesterday')
 
             if not activity or dateparser.parse(activity['updated']).date() != yesterday.date():
-                if self.save_activity(github_username):
+                save = self.save_activity(github_username)
+                if save:
                     print('Updated info of %s.' % github_username)
-                else:
+                elif save == False:
                     print('Couldn\'t get info of %s.' % github_username)
 
     def save_activity(self, github_username):
         github_username = github_username.lower()
 
-        r = requests.get('https://api.github.com/users/%s/events/public' % github_username)
+        r = requests.get('https://api.github.com/users/%s/events/public' % github_username, timeout=15)
         result = r.json()
 
         if not result or type(result) != type([]):
@@ -53,14 +54,13 @@ class GitActivity:
             if eventType == 'PushEvent' and dateparser.parse(event['created_at']).date() == yesterday:
                 commits += int(event['payload']['size'])
 
-        if commits > 0:
-            self.github_activity.insert({
-                'gitname': github_username,
-                'commits': commits,
-                'updated': str(yesterday)
-            })
+        if commits == 0:
+            return None
+
+        self.github_activity.insert({
+            'gitname': github_username,
+            'commits': commits,
+            'updated': str(yesterday)
+        })
 
         return True
-
-g = GitActivity()
-g.update_leaderboard()
