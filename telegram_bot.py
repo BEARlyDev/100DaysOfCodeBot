@@ -28,7 +28,7 @@ HELP_TEXT = """`/gitname github username` to set your username
 
 *Private commands*
 
-/leaderboard to display leaderboard 
+/leaderboard to display leaderboard
 /help to display this help
 /tasks to list your tasks and delete them.
 /streak to see number of days you've been active.
@@ -93,7 +93,7 @@ def todo(bot, update):
     print('task : ' + task)
     user = update.message.from_user
     if(task == ''):
-        update.message.reply_text('💡 The format is /todo <space> Taskname ')    
+        update.message.reply_text('💡 The format is /todo <space> Taskname ')
     else:
         addToDo(user, task)
         update.message.reply_text('🚣‍ @{} added task : {}.\n ({} pending tasks)'.format(user.username, task, str(tasks.count(user_id = user.id,finished = False))))
@@ -103,7 +103,7 @@ def done(bot, update):
     task = update.message.text[6:]
     print('done task : ' + task)
     if(task == ''):
-        update.message.reply_text('💡 The format is /done <space> _Taskname_')    
+        update.message.reply_text('💡 The format is /done <space> _Taskname_')
     else:
         user = update.message.from_user
         addDone(user, task)
@@ -224,7 +224,7 @@ def completed(bot, update):
         update.message.reply_text('👾 Unknown error occurred report the error @ir5had', parse_mode = 'MarkDown')
 def error(bot, update, error):
     """Log Errors caused by Updates."""
-    
+
     logger.warning('Update "%s" caused error "%s"', update, error)
 
 
