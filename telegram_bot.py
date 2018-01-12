@@ -87,16 +87,49 @@ def help(bot, update):
     update.message.reply_text(HELP_TEXT, parse_mode = 'MarkDown')
 
 
+def alarm(bot, job):
+    """Send the alarm message."""
+    usrname = str(bot.getChat(job.context).username)
+    d = dataset.connect('sqlite:///todo.db')
+    t = d['tasks']
+    task = list(t.find(user_id=job.context,finished=False))
+    task_count = len(task)
+
+    REMINDER_TEXT = "Hi @{0},\nYou have {1} pending tasks.\n".format(usrname, task_count)
+    for t in task:
+        line = "• {0}\n".format(dict(t)['text'])
+        REMINDER_TEXT += line 
+
+    bot.send_message(job.context, text=REMINDER_TEXT)
+
+
 def todo(bot, update):
+    # def todo(bot, update, args, job_queue, chat_data):
     """Send a message when the command /help is issued."""
     task = update.message.text[6:]
     print('task : ' + task)
     user = update.message.from_user
+    
     if(task == ''):
         update.message.reply_text('💡 The format is /todo <space> Taskname ')    
     else:
         addToDo(user, task)
-        update.message.reply_text('🚣‍ @{} added task : {}.\n ({} pending tasks)'.format(user.username, task, str(tasks.count(user_id = user.id,finished = False))))
+        update.message.reply_text('🚣‍ @{} added task : {}.\n ({} pending tasks)'.format(user.username, task, str(tasks.count(user_id = user.id,finished = False))))        
+        # job = job_queue.run_repeating(alarm, interval=60,first=0, context=update.message.chat_id)
+            
+def reminder(bot, update, args, job_queue, chat_data):
+    cmd = str(update.message.text[10:])
+    print(job_queue.jobs())
+    print cmd
+    if cmd == 'on':
+        update.message.reply_text('Reminder turned on\n')
+        job = job_queue.run_repeating(alarm, interval=86400,first=0, context=update.message.chat_id)
+        job.enabled = True
+    elif cmd == 'off':
+        update.message.reply_text('Reminder turned off\n')
+        job_queue.stop()
+    else:
+        update.message.reply_text('Handle reminders with /reminder on  or /reminder off\n')
 
 def done(bot, update):
     """Send a message when the command /help is issued."""
@@ -165,8 +198,6 @@ def tasks_(bot, update):
         else:
             reply += ' - ⭕ /delete_{}\n'.format(str(task['id']))
     update.message.reply_text(reply)
-
-
 
 def echo(bot, update):
     """Echo the user message."""
@@ -246,9 +277,8 @@ def command_handler(bot, update):
 def main():
     """Start the bot."""
     # Create the EventHandler and pass it your bot's token.
-
     updater = Updater("TOKEN")
-
+    j = updater.job_queue
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
@@ -256,13 +286,19 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("gitname", gitname))
     dp.add_handler(CommandHandler("help", help))
-    dp.add_handler(CommandHandler("todo", todo))
+    # dp.add_handler(CommandHandler("todo", todo))
     dp.add_handler(CommandHandler("done", done))
     dp.add_handler(CommandHandler("completed", completed))
     dp.add_handler(CommandHandler("tasks", tasks_))
     dp.add_handler(CommandHandler("leaderboard", leaderboard))
     dp.add_handler(CommandHandler("streak", streak))
     dp.add_handler(InlineQueryHandler(inlinequery))
+    dp.add_handler(CommandHandler("todo", todo))
+    dp.add_handler(CommandHandler("reminder",reminder,
+                                  pass_args=True,
+                                  pass_job_queue=True,
+                                  pass_chat_data=True))
+
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, echo))
