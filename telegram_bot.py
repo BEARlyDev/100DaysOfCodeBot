@@ -7,8 +7,12 @@ A telegram bot to track activites of the participants of GetSetCode Challenge.
 
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineQueryResultArticle, InputTextMessageContent, ParseMode
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, InlineQueryHandler
+
 import logging
 import dataset
+
+from GitActivity import *
+
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -99,7 +103,7 @@ def alarm(bot, job):
     REMINDER_TEXT = "Hi @{0},\nYou have {1} pending tasks.\n".format(usrname, task_count)
     for t in task:
         line = "• {0}\n".format(dict(t)['text'])
-        REMINDER_TEXT += line 
+        REMINDER_TEXT += line
 
     bot.send_message(job.context, text=REMINDER_TEXT)
 
@@ -115,7 +119,7 @@ def alarm(bot, job):
     REMINDER_TEXT = "Hi @{0},\nYou have {1} pending tasks.\n".format(usrname, task_count)
     for t in task:
         line = "• {0}\n".format(dict(t)['text'])
-        REMINDER_TEXT += line 
+        REMINDER_TEXT += line
 
     bot.send_message(job.context, text=REMINDER_TEXT)
 
@@ -126,14 +130,14 @@ def todo(bot, update):
     task = update.message.text[6:]
     print('task : ' + task)
     user = update.message.from_user
-    
+
     if(task == ''):
         update.message.reply_text('💡 The format is /todo <space> Taskname ')
     else:
         addToDo(user, task)
-        update.message.reply_text('🚣‍ @{} added task : {}.\n ({} pending tasks)'.format(user.username, task, str(tasks.count(user_id = user.id,finished = False))))        
+        update.message.reply_text('🚣‍ @{} added task : {}.\n ({} pending tasks)'.format(user.username, task, str(tasks.count(user_id = user.id,finished = False))))
         # job = job_queue.run_repeating(alarm, interval=60,first=0, context=update.message.chat_id)
-            
+
 def reminder(bot, update, args, job_queue, chat_data):
     cmd = str(update.message.text[10:])
     print(job_queue.jobs())
@@ -181,11 +185,7 @@ def leaderboard(bot, update):
             streak_score = row['count']
             break
         #streak_score = int((streak_score*(streak_score + 1))/2)
-        git_score = 0
-        try:
-            git_score = github_activity.find_one(gitname = user['gitname'])['commits']
-        except:
-            pass
+        git_score = GitActivity().get_total_commit_count(user['gitname'])
         uss.append([user['gitname'], total_score, streak_score, git_score])
         if user['user_id'] == update.message.from_user.id:
             my_score = total_score
