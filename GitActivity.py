@@ -64,3 +64,15 @@ class GitActivity:
         })
 
         return True
+
+    def get_total_commit_count(self, github_username):
+        try:
+            commits = 0
+
+            for result in self.github_activity.find(gitname = github_username):
+                commits += result['commits']
+
+            return commits
+        except:
+            return 0
+
