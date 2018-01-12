@@ -24,6 +24,7 @@ db = dataset.connect('sqlite:///todo.db')
 HELP_TEXT = """`/gitname github username` to set your username
 `/todo topicname` to add a new task
 `/done topicname` to add a finished task
+`/reminder on|off` to turn on or turn off reminder
 `@gsctbot <space>` to mark tasks as finished
 
 *Private commands*
@@ -85,6 +86,22 @@ def help(bot, update):
     # update.message.reply_text(HELP_TEXT, parse_mode = 'MarkDown',
     #    reply_markup=ReplyKeyboardRemove())
     update.message.reply_text(HELP_TEXT, parse_mode = 'MarkDown')
+
+
+def alarm(bot, job):
+    """Send the alarm message."""
+    usrname = str(bot.getChat(job.context).username)
+    d = dataset.connect('sqlite:///todo.db')
+    t = d['tasks']
+    task = list(t.find(user_id=job.context,finished=False))
+    task_count = len(task)
+
+    REMINDER_TEXT = "Hi @{0},\nYou have {1} pending tasks.\n".format(usrname, task_count)
+    for t in task:
+        line = "• {0}\n".format(dict(t)['text'])
+        REMINDER_TEXT += line 
+
+    bot.send_message(job.context, text=REMINDER_TEXT)
 
 
 def alarm(bot, job):
@@ -277,7 +294,7 @@ def command_handler(bot, update):
 def main():
     """Start the bot."""
     # Create the EventHandler and pass it your bot's token.
-    updater = Updater("TOKEN")
+    updater = Updater("472163967:AAH7LwouBgpEInw4WeZpZZPdSEn0ZXDBT4c")
     j = updater.job_queue
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
