@@ -1,22 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Simple Bot to reply to Telegram messages.
-This program is dedicated to the public domain under the CC0 license.
-This Bot uses the Updater class to handle the bot.
-First, a few handler functions are defined. Then, those functions are passed to
-the Dispatcher and registered at their respective places.
-Then, the bot is started and runs until we press Ctrl-C on the command line.
-Usage:
-Basic Echobot example, repeats messages.
-Press Ctrl-C on the command line or send a signal to the process to stop the
-bot.
+"""
+A telegram bot to track activites of the participants of GetSetCode Challenge.
 """
 
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineQueryResultArticle, InputTextMessageContent, ParseMode
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, InlineQueryHandler
+
 import logging
 import dataset
+
+from GitActivity import *
+
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -29,15 +25,25 @@ db = dataset.connect('sqlite:///todo.db')
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
 
-HELP_TEXT = "`/gitname github username` to set your username \n`/todo topicname` to add a new task\n`/done topicname` to add a finished task\n`/tasks' to show all the tasks added\n`/streak` to show the no. of days\n `@gsctbot <space>` to mark tasks as finished\n"
+HELP_TEXT = """`/gitname github username` to set your username
+`/todo topicname` to add a new task
+`/done topicname` to add a finished task
+`/reminder on|off` to turn on or turn off reminder
+`@gsctbot <space>` to mark tasks as finished
 
-commands = ['none', 'todo', 'done','start']
-reply_keyboard = [['/todo', '/done'],['/leaderboard','/help']]
-cur_command = 'none'
+*Private commands*
+
+/leaderboard to display leaderboard
+/help to display this help
+/tasks to list your tasks and delete them.
+/streak to see number of days you've been active.
+"""
+
 from datetime import date, timedelta
 
 users = db['users']
 tasks = db['tasks']
+github_activity = db['github_activity']
 
 def addToDo(user, task):
     tasks.insert(dict(user_id = user.id, text = task, finished = False, daystarted = date.today().isoformat()))
@@ -83,7 +89,7 @@ def help(bot, update):
     """Send a message when the command /help is issued."""
     # update.message.reply_text(HELP_TEXT, parse_mode = 'MarkDown',
     #    reply_markup=ReplyKeyboardRemove())
-    update.message.reply_text(HELP_TEXT)
+    update.message.reply_text(HELP_TEXT, parse_mode = 'MarkDown')
 
 
 def alarm(bot, job):
@@ -97,7 +103,23 @@ def alarm(bot, job):
     REMINDER_TEXT = "Hi @{0},\nYou have {1} pending tasks.\n".format(usrname, task_count)
     for t in task:
         line = "• {0}\n".format(dict(t)['text'])
-        REMINDER_TEXT += line 
+        REMINDER_TEXT += line
+
+    bot.send_message(job.context, text=REMINDER_TEXT)
+
+
+def alarm(bot, job):
+    """Send the alarm message."""
+    usrname = str(bot.getChat(job.context).username)
+    d = dataset.connect('sqlite:///todo.db')
+    t = d['tasks']
+    task = list(t.find(user_id=job.context,finished=False))
+    task_count = len(task)
+
+    REMINDER_TEXT = "Hi @{0},\nYou have {1} pending tasks.\n".format(usrname, task_count)
+    for t in task:
+        line = "• {0}\n".format(dict(t)['text'])
+        REMINDER_TEXT += line
 
     bot.send_message(job.context, text=REMINDER_TEXT)
 
@@ -108,14 +130,14 @@ def todo(bot, update):
     task = update.message.text[6:]
     print('task : ' + task)
     user = update.message.from_user
-    
+
     if(task == ''):
-        update.message.reply_text('💡 The format is /todo <space> Taskname ')    
+        update.message.reply_text('💡 The format is /todo <space> Taskname ')
     else:
         addToDo(user, task)
-        update.message.reply_text('🚣‍ @{} added task : {}.\n ({} pending tasks)'.format(user.username, task, str(tasks.count(user_id = user.id,finished = False))))        
+        update.message.reply_text('🚣‍ @{} added task : {}.\n ({} pending tasks)'.format(user.username, task, str(tasks.count(user_id = user.id,finished = False))))
         # job = job_queue.run_repeating(alarm, interval=60,first=0, context=update.message.chat_id)
-            
+
 def reminder(bot, update, args, job_queue, chat_data):
     cmd = str(update.message.text[10:])
     print(job_queue.jobs())
@@ -135,7 +157,7 @@ def done(bot, update):
     task = update.message.text[6:]
     print('done task : ' + task)
     if(task == ''):
-        update.message.reply_text('💡 The format is /done <space> _Taskname_')    
+        update.message.reply_text('💡 The format is /done <space> _Taskname_')
     else:
         user = update.message.from_user
         addDone(user, task)
@@ -149,6 +171,10 @@ def leaderboard(bot, update):
     """Send a message when the command /help is issued."""
     delta = timedelta(days = 1)
     enddate = date.today()
+
+    # disable for group chat
+    if update.message.chat_id < 0:
+        return
     uss = []
     my_score = 0
     for user in users:
@@ -158,8 +184,9 @@ def leaderboard(bot, update):
         for row in streak:
             streak_score = row['count']
             break
-        streak_score = int((streak_score*(streak_score + 1))/2)
-        uss.append([user['gitname'], total_score, streak_score])
+        #streak_score = int((streak_score*(streak_score + 1))/2)
+        git_score = GitActivity().get_total_commit_count(user['gitname'])
+        uss.append([user['gitname'], total_score, streak_score, git_score])
         if user['user_id'] == update.message.from_user.id:
             my_score = total_score
     uss.sort(key = lambda x : (-x[1],-x[2]))
@@ -167,9 +194,8 @@ def leaderboard(bot, update):
     i = 0
     for u in uss:
         i += 1
-        lb += ('{}. {} - {} \n').format(i, u[0], u[1])
+        lb += ('{}. {} - {} 🔥{}  👾{} \n').format(i, u[0], u[1], u[2], u[3])
     lb += "\n\n Your score : {}".format(str(my_score))
-    reply = '🏆\n*Leaderboard will be available soon!* \n\n'
     update.message.reply_text(lb)
 
 
@@ -187,12 +213,15 @@ def tasks_(bot, update):
         if task['finished']:
             reply += ' - ✅ \n'
         else:
-            reply += ' - ⭕ /finished{}\n'.format(str(task['id']))
-    update.message.reply_text(reply, parse_mode = 'MarkDown')
+            reply += ' - ⭕ /delete_{}\n'.format(str(task['id']))
+    update.message.reply_text(reply)
 
 def echo(bot, update):
     """Echo the user message."""
     user = update.message.from_user
+    # disable for group chat
+    if update.message.chat_id < 0:
+        return
     #print(update.message.text[:10])
     update.message.reply_text('🙌 Sorry, didnt get you, /help for list of commands')
 
@@ -214,6 +243,9 @@ def inlinequery(bot, update):
     update.inline_query.answer(results, cache_time=0, is_personal= True)
 
 def streak(bot, update):
+    # if the command is from a group chat no need of reply
+    if update.message.chat_id < 0:
+        return
     user = update.message.from_user
     statement = 'SELECT  count(dayfinished) as count FROM (SELECT DISTINCT dayfinished FROM tasks WHERE user_id={});'.format(user.id)
     streak = db.query(statement)
@@ -221,6 +253,7 @@ def streak(bot, update):
         streak_score = row['count']
         break
     update.message.reply_text('🔥 Your streak : {} days'.format(streak_score), parse_mode = 'MarkDown')
+
 def completed(bot, update):
     user = update.message.from_user
     try:
@@ -239,23 +272,29 @@ def completed(bot, update):
         update.message.reply_text('👾 Unknown error occurred report the error @ir5had', parse_mode = 'MarkDown')
 def error(bot, update, error):
     """Log Errors caused by Updates."""
-    
+
     logger.warning('Update "%s" caused error "%s"', update, error)
 
-def commandd(bot, update):
-    if update.message.text[:9] == '/finished':
+
+def command_handler(bot, update):
+    # disable for group chat
+    if update.message.chat_id < 0:
+        return
+    if update.message.text[:7] == '/delete':
         try:
-            task_id = update.message.text.split('d')[1]
-            tasks.update(dict(id=task_id, finished=True), ['id'])
-            reply = 'Task marked as finished.'
-            update.message.reply_text(reply, parse_mode = 'MarkDown')
+            task_id = int(update.message.text.split('_')[1])
+            tasks.delete(id=task_id)
+            reply = 'Task deleted.'
+            update.message.reply_text(reply)
         except:
-            update.message.reply_text('error occurred', parse_mode = 'MarkDown')
+            update.message.reply_text('Deletion error occurred', parse_mode = 'MarkDown')
+
+
+
 def main():
     """Start the bot."""
     # Create the EventHandler and pass it your bot's token.
-
-    updater = Updater("514604364:AAF7Iae4c11PLjefhBChUhx5PMSlStEKHIc")
+    updater = Updater("TOKEN")
     j = updater.job_queue
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
@@ -280,8 +319,8 @@ def main():
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, echo))
+    dp.add_handler(MessageHandler(Filters.command, command_handler))
 
-    dp.add_handler(MessageHandler(Filters.command, commandd))
     # log all errors
     dp.add_error_handler(error)
 
