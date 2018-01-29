@@ -294,7 +294,7 @@ def command_handler(bot, update):
 def main():
     """Start the bot."""
     # Create the EventHandler and pass it your bot's token.
-    updater = Updater("514604364:AAF7Iae4c11PLjefhBChUhx5PMSlStEKHIc")
+    updater = Updater("TOKEN")
     j = updater.job_queue
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
