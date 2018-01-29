@@ -25,11 +25,11 @@ db = dataset.connect('sqlite:///todo.db')
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
 
-HELP_TEXT = """`/gitname github username` to set your username
-`/todo topicname` to add a new task
-`/done topicname` to add a finished task
-`/reminder on|off` to turn on or turn off reminder
-`@gsctbot <space>` to mark tasks as finished
+HELP_TEXT = """/gitname `github username` to set your username
+/todo `topicname` to add a new task
+/done `topicname` to add a finished task
+/reminder `on|off` to turn on or turn off reminder
+@gsctbot <space> to mark tasks as finished
 
 *Private commands*
 
@@ -104,24 +104,8 @@ def alarm(bot, job):
     for t in task:
         line = "• {0}\n".format(dict(t)['text'])
         REMINDER_TEXT += line
-
     bot.send_message(job.context, text=REMINDER_TEXT)
 
-
-def alarm(bot, job):
-    """Send the alarm message."""
-    usrname = str(bot.getChat(job.context).username)
-    d = dataset.connect('sqlite:///todo.db')
-    t = d['tasks']
-    task = list(t.find(user_id=job.context,finished=False))
-    task_count = len(task)
-
-    REMINDER_TEXT = "Hi @{0},\nYou have {1} pending tasks.\n".format(usrname, task_count)
-    for t in task:
-        line = "• {0}\n".format(dict(t)['text'])
-        REMINDER_TEXT += line
-
-    bot.send_message(job.context, text=REMINDER_TEXT)
 
 
 def todo(bot, update):
@@ -144,9 +128,16 @@ def reminder(bot, update, args, job_queue, chat_data):
     print cmd
     if cmd == 'on':
         update.message.reply_text('Reminder turned on\n')
+        for j in job_queue.jobs():
+            j.schedule_removal()
+        job_queue.stop()
         job = job_queue.run_repeating(alarm, interval=86400,first=0, context=update.message.chat_id)
+        job_queue.start()
         job.enabled = True
     elif cmd == 'off':
+        for j in job_queue.jobs():
+            j.schedule_removal()
+
         update.message.reply_text('Reminder turned off\n')
         job_queue.stop()
     else:
@@ -294,7 +285,7 @@ def command_handler(bot, update):
 def main():
     """Start the bot."""
     # Create the EventHandler and pass it your bot's token.
-    updater = Updater("TOKEN")
+    updater = Updater("514604364:AAF7Iae4c11PLjefhBChUhx5PMSlStEKHIc")
     j = updater.job_queue
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
