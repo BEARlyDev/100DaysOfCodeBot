@@ -111,6 +111,9 @@ def alarm(bot, job):
 def todo(bot, update):
     # def todo(bot, update, args, job_queue, chat_data):
     """Send a message when the command /help is issued."""
+    if update.message.chat_id != -1001187606231:
+    	update.message.reply_text('💡 This command is a group only command!. Let others know what you are working on 😎')
+    	return
     task = update.message.text[6:]
     print('task : ' + task)
     user = update.message.from_user
@@ -145,6 +148,9 @@ def reminder(bot, update, args, job_queue, chat_data):
 
 def done(bot, update):
     """Send a message when the command /help is issued."""
+    if update.message.chat_id != -1001187606231:
+    	update.message.reply_text('💡 This command is a group only command!. Let others know what you are working on 🔥')
+    	return
     task = update.message.text[6:]
     print('done task : ' + task)
     if(task == ''):
@@ -246,6 +252,9 @@ def streak(bot, update):
     update.message.reply_text('🔥 Your streak : {} days'.format(streak_score), parse_mode = 'MarkDown')
 
 def completed(bot, update):
+    if update.message.chat_id != -1001187606231:
+    	update.message.reply_text('💡 You can only mark tasks as completed from the group itself, update your progress with community! 💹')
+    	return
     user = update.message.from_user
     try:
         task_id = update.message.text.replace('/completed', '').strip()

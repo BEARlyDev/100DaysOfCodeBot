@@ -39,7 +39,7 @@ class GitActivity:
     def save_activity(self, github_username):
         github_username = github_username.lower()
 
-        r = requests.get('https://api.github.com/users/%s/events/public' % github_username, timeout=15)
+        r = requests.get('https://api.github.com/users/%s/events/public?client_id=ae8c70c7b22c2f1ba4c2&client_secret=a740e64e23809955c54425dd2815c06f1c6ad7a0' % github_username, timeout=15)
         result = r.json()
 
         if not result or type(result) != type([]):
