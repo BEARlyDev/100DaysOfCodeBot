@@ -1,2 +1,3 @@
-# gsct-telegram-bot
-Telegram bot for Get Set Code, #ShipIn30Days Challenge
+# 100DaysOfCodeBot
+
+A telegram bot for #100DaysOfCode challenge !
