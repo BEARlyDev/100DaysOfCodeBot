@@ -175,7 +175,7 @@ def todo(bot, update):
 def reminder(bot, update, args, job_queue, chat_data):
     cmd = str(update.message.text[10:])
     print(job_queue.jobs())
-    print (cmd)
+    print(cmd)
     if cmd == 'on':
         update.message.reply_text('Reminder turned on\n')
         for j in job_queue.jobs():
@@ -385,7 +385,7 @@ def command_handler(bot, update):
 def main():
     """Start the bot."""
     # Create the EventHandler and pass it your bot's token.
-    updater = Updater("TOKEN")
+    updater = Updater(os.environ['TG_BOT_TOKEN'])
     j = updater.job_queue
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
