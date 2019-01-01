@@ -72,7 +72,7 @@ def getTasks(user):
     for task in tasks:
         if(task['user_id'] == user.id):
             its += [task['text']]
-            print task['text']
+            print(task['text'])
     return its
 
 
@@ -175,7 +175,7 @@ def todo(bot, update):
 def reminder(bot, update, args, job_queue, chat_data):
     cmd = str(update.message.text[10:])
     print(job_queue.jobs())
-    print cmd
+    print (cmd)
     if cmd == 'on':
         update.message.reply_text('Reminder turned on\n')
         for j in job_queue.jobs():
