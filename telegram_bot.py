@@ -312,8 +312,9 @@ def streak(bot, update):
         return
     user = update.message.from_user
     statement = 'SELECT  count(dayfinished) as count FROM ' + \
-    '(SELECT DISTINCT dayfinished FROM tasks WHERE user_id={});'.format(
-        user.id)
+        '(SELECT DISTINCT dayfinished FROM tasks WHERE user_id={});'.format(
+            user.id
+        )
     streak = db.query(statement)
     for row in streak:
         streak_score = row['count']
