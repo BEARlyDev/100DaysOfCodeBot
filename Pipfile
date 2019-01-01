@@ -8,9 +8,10 @@ verify_ssl = true
 [packages]
 python-telegram-bot = "*"
 dataset = "*"
+telegram = "*"
 dateparser = "*"
 requests = "*"
-telegram = "*"
+pip = "==18.0"
 
 [requires]
 python_version = "3.6"
