@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+A telegram bot to track activites of the participants of GetSetCode Challenge.
+"""
+
 from datetime import date, timedelta
 
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, ParseMode
@@ -9,14 +13,12 @@ from telegram import InlineQueryResultArticle, InputTextMessageContent
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.ext import InlineQueryHandler
 
-"""
-A telegram bot to track activites of the participants of GetSetCode Challenge.
-"""
+from GitActivity import *
+
+import os
 
 import logging
 import dataset
-
-from GitActivity import *
 
 # Enable logging
 logging.basicConfig(
