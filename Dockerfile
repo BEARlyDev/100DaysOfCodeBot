@@ -9,7 +9,8 @@ RUN apt-get install -y libicu57 libicu-dev
 RUN pip3 install pipenv
 
 ADD . /app
-RUN cd /app && pipenv install
+WORKDIR /app
+RUN pipenv install --deploy --system
 
 # Configure Services and Port
 CMD ["./run.sh"]
