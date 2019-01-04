@@ -1,8 +1,12 @@
 # Download base image ubuntu 18.04
-FROM ubuntu:18.04
+FROM python:3.6
 
-RUN apt-get install -y python3 python3-pip python3-icu && \
-    rm -rf /var/lib/apt/lists/*
+ENV LC_ALL C.UTF-8
+ENV LANG C.UTF-8
+
+RUN apt-get update
+RUN apt-get install -y libicu57 libicu-dev
+RUN pip3 install pipenv
 
 ADD . /app
 RUN cd /app && pipenv install
