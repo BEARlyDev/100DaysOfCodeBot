@@ -13,8 +13,8 @@ RUN apk add \
     icu-dev
 RUN pip3 install pipenv
 
-ADD . /build
-WORKDIR /build
+ADD . /app
+WORKDIR /app
 
 ENV PIPENV_VENV_IN_PROJECT 1
 
