@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-A telegram bot to track activites of the participants of GetSetCode Challenge.
+A telegram bot to track activites of the
+participants of @BEARly's #100DaysOfCode Challenge.
 """
 
 from datetime import date, timedelta
@@ -38,7 +39,7 @@ HELP_TEXT = """/gitname `github username` to set your username
 /todo `topicname` to add a new task
 /done `topicname` to add a finished task
 /reminder `on|off` to turn on or turn off reminder
-@gsctbot <space> to mark tasks as finished
+@bearlyhdocbot <space> to mark tasks as finished
 
 *Private commands*
 
@@ -81,11 +82,12 @@ def getTasks(user):
 def start(bot, update):
     """Send a message when the command /start is issued."""
     user = update.message.from_user
-    reply = '_Dear {}_,\n\n *Welcome to GetSetCode* 💻 ,\n\n' + \
+    reply = '_Dear {}_,\n\n' + \
+        '*Welcome to @BEARlyDev\'s #100DaysOfCodeChallenge*,\n\n' + \
         'Start by setting your github username ' + \
         'using /gitname <space> _username_.'
 
-    reply = reply.format(user.first_name.title())
+    reply = reply.format(user.first_name)
 
     update.message.reply_text(
         reply,
@@ -114,7 +116,7 @@ def gitname(bot, update):
             ))
         update.message.reply_text(
             '🐙 Git username successfully set,\n' +
-            'use /help to continue. Don\'t forget to join our group @gsc_tdc'
+            'use /help to continue. Don\'t forget to join our group @BEARlyDev'
         )
 
 
