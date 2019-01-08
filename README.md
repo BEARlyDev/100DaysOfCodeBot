@@ -19,6 +19,21 @@ Add this bot to a group
   ```bash
   TG_BOT_TOKEN=token_here
   ```
+
+### pipenv
+
+* Install dependencies :
+  ```bash
+  pipenv install
+  ```
+* Run it :
+  ```bash
+  pipenv shell
+  python telegram_bot.py
+  ```
+
+### Docker
+
 * Build docker image named as `hdoc` :
   ```
   docker build -t hdoc .
