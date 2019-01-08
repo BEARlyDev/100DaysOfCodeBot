@@ -6,11 +6,10 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-python-telegram-bot = "*"
+python-telegram-bot = "==11.1.0"
 dataset = "*"
 dateparser = "*"
 requests = "*"
-telegram = "*"
 
 [requires]
 python_version = "3.6"
