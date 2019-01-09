@@ -29,7 +29,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-db = dataset.connect('sqlite:///todo.db')
+db = dataset.connect(os.environ['DATABASE_URL'])
 
 
 # Define a few command handlers. These usually take the two arguments bot and
