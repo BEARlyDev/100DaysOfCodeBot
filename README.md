@@ -15,10 +15,14 @@ Add this bot to a group
 
 ## Development
 
-* Set bot token as an environment variable in `.env` file :
-  ```bash
-  TG_BOT_TOKEN=token_here
-  ```
+* Set bot token as an environment variable in `.env` file.
+* Set up a database and set its connection URL in `README.md`
+
+Sample `.env` file :
+```bash
+TG_BOT_TOKEN=token_here
+DATABASE_URL=postgres://:@localhost:5432/hdoc
+```
 
 ### pipenv
 
